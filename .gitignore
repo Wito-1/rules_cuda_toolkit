@@ -7,3 +7,6 @@ user.bazelrc
 
 # Resolved lockfiles (environment-specific; regenerated on build)
 MODULE.bazel.lock
+
+# Claude Code session state
+.claude/
