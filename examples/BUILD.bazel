@@ -1,7 +1,28 @@
 load("@rules_cuda_toolkit//cuda:defs.bzl", "cuda_binary", "cuda_library", "cuda_test")
 load("@rules_cuda_toolkit//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
+load(":multi_version.bzl", "cuda_version_test")
 
 package(default_visibility = ["//visibility:public"])
+
+# Version-pinned platforms. Building with --platforms=//:cuda_12_8_1 (or via the
+# cuda_version_test transition below) makes @cuda resolve to that CUDA toolkit.
+platform(
+    name = "cuda_12_8_1",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "@cuda//:cuda_12_8_1",
+    ],
+)
+
+platform(
+    name = "cuda_12_9_1",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "@cuda//:cuda_12_9_1",
+    ],
+)
 
 # The CUDA toolchain, wired to the @cuda repository from cuda_toolkit.
 cuda_toolkit_toolchain(
@@ -36,6 +57,21 @@ cuda_test(
     name = "vector_add_test",
     srcs = ["vector_add_test.cc"],
     deps = [":vector_add"],
+)
+
+# The SAME test, run against two different CUDA toolkits. Each target
+# transitions nvcc + the CUDA runtime to its pinned version:
+#   bazel test //:vector_add_test_cuda_12_8 //:vector_add_test_cuda_12_9
+cuda_version_test(
+    name = "vector_add_test_cuda_12_8",
+    actual = ":vector_add_test",
+    platform = ":cuda_12_8_1",
+)
+
+cuda_version_test(
+    name = "vector_add_test_cuda_12_9",
+    actual = ":vector_add_test",
+    platform = ":cuda_12_9_1",
 )
 
 # Relocatable device code: exercises the extra `nvcc -dlink` device-link step.

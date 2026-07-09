@@ -42,7 +42,15 @@ cuda_ext.redist(
     # Pin cuDNN on the same tag to expose @cuda//cudnn.
     cudnn_version = "8.9.7",
 )
-use_repo(cuda_ext, "cuda", "cuda_12_9_1")
+
+# A second CUDA version. @cuda resolves whichever one the active platform pins
+# via its @cuda//:cuda_<version> constraint (see the platforms in BUILD.bazel);
+# the default (unpinned) platform uses the highest registered version.
+cuda_ext.redist(
+    name = "cuda_12_8_1",
+    version = "12.8.1",
+)
+use_repo(cuda_ext, "cuda", "cuda_12_8_1", "cuda_12_9_1")
 
 # The CUDA toolchain declared in //:cuda_toolchain (see BUILD.bazel).
 register_toolchains("//:cuda_toolchain")

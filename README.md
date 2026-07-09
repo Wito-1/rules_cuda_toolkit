@@ -144,6 +144,40 @@ cuSOLVER, cuRAND, NVRTC, etc. — any component `cuda_toolkit` exposes under
 > With the patch, the `examples/` cuDNN convolution test builds, links **and
 > runs** — verified end-to-end on an NVIDIA L4.
 
+### Multiple CUDA versions
+
+Register more than one version; `@cuda` resolves whichever one the active
+platform pins via a `@cuda//:cuda_<version>` constraint (the default, unpinned
+platform uses the highest registered version):
+
+```starlark
+# MODULE.bazel
+cuda_ext.redist(name = "cuda_12_9_1", version = "12.9.1")
+cuda_ext.redist(name = "cuda_12_8_1", version = "12.8.1")
+use_repo(cuda_ext, "cuda", "cuda_12_8_1", "cuda_12_9_1")
+
+# BUILD.bazel — a version-pinned platform
+platform(
+    name = "cuda_12_8_1",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+        "@cuda//:cuda_12_8_1",
+    ],
+)
+```
+
+```sh
+bazel test //:my_test --platforms=//:cuda_12_8_1   # build against CUDA 12.8
+```
+
+The `examples/` directory runs the **same** `vector_add_test` against CUDA 12.8
+**and** 12.9 as two targets (`//:vector_add_test_cuda_12_8` and `…_12_9`) via a
+small platform-transition wrapper, [`examples/multi_version.bzl`](examples/multi_version.bzl).
+It transitions both the target platform and the execution platform, so the CUDA
+runtime *and* the exec-configuration nvcc come from the pinned toolkit — verified
+on an L4: each target compiles with its own `cuda_12_8_1`/`cuda_12_9_1` nvcc.
+
 ## Public API
 
 Loaded from `@rules_cuda_toolkit//cuda:defs.bzl`:
