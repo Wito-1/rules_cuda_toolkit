@@ -252,6 +252,34 @@ executable, compiled by the host `…linux_x86_64/bin/nvcc` with
 (The example uses the system `g++-aarch64-linux-gnu`; running the result needs
 real aarch64 CUDA hardware.)
 
+#### Jetson / embedded (L4T)
+
+`arm64` defaults to NVIDIA's **`linux-sbsa`** (server ARM) redistribution. Jetson
+uses a *different* aarch64 build, `linux-aarch64` (L4T), which `cuda_toolkit`
+0.0.4 doesn't expose. This repo ships a patch —
+[`patches/cuda_toolkit_jetson.patch`](patches/cuda_toolkit_jetson.patch) — that
+adds the `linux-aarch64` platform and a `@cuda_toolkit//:jetson` constraint to
+disambiguate it from SBSA (both are the aarch64 ISA, so a plain
+`@platforms//cpu:arm64` can't tell them apart). Apply it in the same
+`single_version_override`, then define a Jetson platform:
+
+```starlark
+platform(
+    name = "linux_jetson",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+        "@cuda_toolkit//:jetson",   # -> linux-aarch64 instead of linux-sbsa
+    ],
+)
+```
+
+The host cc toolchain and the generated CUDA toolchain are identical to the SBSA
+case — only the CUDA redistribution changes. Verified on an x86_64 host
+(`examples/cross/`): `//cross:linux_jetson` resolves the runtime to
+`cuda_cudart__linux_jetson` while `//cross:linux_aarch64` stays on
+`cuda_cudart__linux_sbsa`.
+
 ## Requirements & limitations
 
 - Linux `x86_64` / `aarch64` (the platforms `cuda_toolkit` publishes for).

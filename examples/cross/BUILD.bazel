@@ -122,3 +122,30 @@ build_test(
     name = "vector_add_aarch64_test",
     targets = [":vector_add_aarch64_build"],
 )
+
+# ---------------------------------------------------------------------------
+# The same program cross-compiled for NVIDIA Jetson / embedded (L4T). The
+# @cuda_toolkit//:jetson constraint makes @cuda resolve to the linux-aarch64
+# redistribution instead of linux-sbsa (see //patches:cuda_toolkit_jetson.patch).
+# The host cc cross toolchain and the generated CUDA toolchain are the same as
+# for SBSA — only the CUDA redistribution differs.
+# ---------------------------------------------------------------------------
+platform(
+    name = "linux_jetson",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+        "@cuda_toolkit//:jetson",
+    ],
+)
+
+build_for_platform(
+    name = "vector_add_jetson_build",
+    actual = ":vector_add_aarch64",
+    platform = ":linux_jetson",
+)
+
+build_test(
+    name = "vector_add_jetson_test",
+    targets = [":vector_add_jetson_build"],
+)

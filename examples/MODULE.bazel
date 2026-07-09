@@ -26,7 +26,13 @@ single_version_override(
     module_name = "cuda_toolkit",
     version = "0.0.4",
     patch_strip = 1,
-    patches = ["//patches:cuda_toolkit_sonames.patch"],
+    patches = [
+        # Point cuDNN/nvrtc cc_imports at their DT_SONAME shared objects.
+        "//patches:cuda_toolkit_sonames.patch",
+        # Add a linux-aarch64 (Jetson/L4T) platform alongside linux-sbsa,
+        # selectable via the @cuda_toolkit//:jetson constraint.
+        "//patches:cuda_toolkit_jetson.patch",
+    ],
 )
 
 # rules_cuda_toolkit needs a host C/C++ toolchain that nvcc drives via -ccbin.

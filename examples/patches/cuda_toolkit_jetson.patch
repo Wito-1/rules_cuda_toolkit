@@ -1,0 +1,41 @@
+diff -ruN orig/BUILD.bazel new/BUILD.bazel
+--- a/BUILD.bazel	2026-07-09 19:21:35.916560083 +0000
++++ b/BUILD.bazel	2026-07-09 19:21:35.940560823 +0000
+@@ -38,3 +38,22 @@
+     name = "linux_aarch64",
+     actual = ":linux_arm64",
+ )
++
++# Distinguishes the NVIDIA Jetson / embedded (L4T) aarch64 build from the
++# default server (SBSA) aarch64 build. A platform adds `:jetson` to select the
++# `linux-aarch64` redistribution; without it, arm64 resolves to `linux-sbsa`.
++constraint_setting(name = "gpu_platform")
++
++constraint_value(
++    name = "jetson",
++    constraint_setting = ":gpu_platform",
++)
++
++config_setting(
++    name = "linux_jetson",
++    constraint_values = [
++        "@platforms//os:linux",
++        "@platforms//cpu:arm64",
++        ":jetson",
++    ],
++)
+diff -ruN orig/cuda/cuda_redist_repositories.bzl new/cuda/cuda_redist_repositories.bzl
+--- a/cuda/cuda_redist_repositories.bzl	2026-07-09 19:21:35.914560021 +0000
++++ b/cuda/cuda_redist_repositories.bzl	2026-07-09 19:21:35.935560668 +0000
+@@ -21,6 +21,11 @@
+         "repo_suffix": "linux_sbsa",
+         "config_setting": "@cuda_toolkit//:linux_arm64",
+     },
++    "linux_jetson": {
++        "redist_platform_key": "linux-aarch64",
++        "repo_suffix": "linux_jetson",
++        "config_setting": "@cuda_toolkit//:linux_jetson",
++    },
+ }
+ 
+ _REPO_PUBLIC_TARGETS = REPO_PUBLIC_TARGETS
