@@ -222,6 +222,36 @@ returned as a `CcInfo`, so ordinary `cc_*` rules link the CUDA code and the CUDA
 runtime with no extra wiring. With `rdc = True` (or an `lto_` arch), an extra
 `nvcc -dlink` step device-links the relocatable objects before archiving.
 
+### Cross-compiling to aarch64 (SBSA / Grace / Jetson)
+
+The exec/target split makes cross-compilation natural: nvcc and the host
+compiler run on the x86_64 build host (execution configuration) while the CUDA
+runtime and final binary are produced for aarch64 (target configuration).
+`@cuda` maps `@platforms//cpu:arm64` to the `linux-sbsa` redistribution
+automatically. You provide two things:
+
+1. An **aarch64 host C/C++ cross toolchain** for nvcc's `-ccbin` and the final
+   link (system `aarch64-linux-gnu-*`, or a hermetic one such as
+   `toolchains_llvm` with an aarch64 sysroot).
+2. A **CUDA toolchain** with `exec_compatible_with` x86_64 and
+   `target_compatible_with` arm64 — `cuda_toolkit_toolchain(...)` takes those
+   directly.
+
+A complete, working setup is in [`examples/cross/`](examples/cross/): it builds
+the same `vector_add` program for aarch64 with
+
+```sh
+bazel build //cross:vector_add_aarch64 --platforms=//cross:linux_aarch64
+# or, platform pinned by a transition (no flag needed):
+bazel test //cross:vector_add_aarch64_test
+```
+
+Verified on an x86_64 host: the output is an `ELF 64-bit … ARM aarch64`
+executable, compiled by the host `…linux_x86_64/bin/nvcc` with
+`-ccbin aarch64-linux-gnu-gcc` and linked against the SBSA CUDA runtime.
+(The example uses the system `g++-aarch64-linux-gnu`; running the result needs
+real aarch64 CUDA hardware.)
+
 ## Requirements & limitations
 
 - Linux `x86_64` / `aarch64` (the platforms `cuda_toolkit` publishes for).

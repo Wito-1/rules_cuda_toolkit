@@ -4,6 +4,9 @@ load(":multi_version.bzl", "cuda_version_test")
 
 package(default_visibility = ["//visibility:public"])
 
+# Sources reused by the cross-compilation example in //cross.
+exports_files(["main.cc"])
+
 # Version-pinned platforms. Building with --platforms=//:cuda_12_8_1 (or via the
 # cuda_version_test transition below) makes @cuda resolve to that CUDA toolkit.
 platform(

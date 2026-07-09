@@ -9,6 +9,7 @@ local_path_override(
     path = "..",
 )
 
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.17")
 
@@ -55,3 +56,10 @@ use_repo(cuda_ext, "cuda", "cuda_12_8_1", "cuda_12_9_1")
 
 # The CUDA toolchain declared in //:cuda_toolchain (see BUILD.bazel).
 register_toolchains("//:cuda_toolchain")
+
+# Cross-compilation to aarch64 (see //cross): an aarch64 host cc toolchain and
+# a CUDA toolchain whose target is aarch64 (exec stays x86_64 so nvcc runs).
+register_toolchains(
+    "//cross:aarch64_cc_toolchain",
+    "//cross:cuda_toolchain_aarch64",
+)

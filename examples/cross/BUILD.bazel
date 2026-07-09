@@ -1,0 +1,130 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_cc//cc/private/toolchain:unix_cc_toolchain_config.bzl", "cc_toolchain_config")
+load("@rules_cc//cc/toolchains:cc_toolchain.bzl", "cc_toolchain")
+load("@rules_cuda_toolkit//cuda:defs.bzl", "cuda_binary")
+load("@rules_cuda_toolkit//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
+load(":transition.bzl", "build_for_platform")
+
+package(default_visibility = ["//visibility:public"])
+
+# ---------------------------------------------------------------------------
+# aarch64 host C/C++ cross toolchain (system `aarch64-linux-gnu-*`).
+#
+# This is ordinary Bazel cross-cc plumbing, not specific to rules_cuda_toolkit;
+# swap in a hermetic cross toolchain (e.g. toolchains_llvm with a sysroot) for
+# a fully hermetic build. nvcc drives this compiler via -ccbin.
+# ---------------------------------------------------------------------------
+_AARCH64_INCLUDES = [
+    "/usr/lib/gcc-cross/aarch64-linux-gnu/13/include",
+    "/usr/aarch64-linux-gnu/include/c++/13",
+    "/usr/aarch64-linux-gnu/include/c++/13/aarch64-linux-gnu",
+    "/usr/aarch64-linux-gnu/include/c++/13/backward",
+    "/usr/aarch64-linux-gnu/include",
+    "/usr/include",
+]
+
+_AARCH64_TOOLS = {
+    "gcc": "/usr/bin/aarch64-linux-gnu-gcc",
+    "cpp": "/usr/bin/aarch64-linux-gnu-cpp",
+    "ar": "/usr/bin/aarch64-linux-gnu-ar",
+    "ld": "/usr/bin/aarch64-linux-gnu-ld",
+    "nm": "/usr/bin/aarch64-linux-gnu-nm",
+    "objcopy": "/usr/bin/aarch64-linux-gnu-objcopy",
+    "objdump": "/usr/bin/aarch64-linux-gnu-objdump",
+    "strip": "/usr/bin/aarch64-linux-gnu-strip",
+    "gcov": "/usr/bin/aarch64-linux-gnu-gcov",
+}
+
+cc_toolchain_config(
+    name = "aarch64_cc_config",
+    abi_libc_version = "local",
+    abi_version = "local",
+    compile_flags = [
+        "-fstack-protector",
+        "-Wall",
+        "-fno-omit-frame-pointer",
+    ],
+    compiler = "gcc",
+    cpu = "aarch64",
+    cxx_builtin_include_directories = _AARCH64_INCLUDES,
+    cxx_flags = ["-std=c++17"],
+    dbg_compile_flags = ["-g"],
+    host_system_name = "x86_64-linux-gnu",
+    link_flags = [
+        "-Wl,-no-as-needed",
+        "-Wl,-z,relro,-z,now",
+        "-pass-exit-codes",
+    ],
+    link_libs = ["-lstdc++", "-lm"],
+    opt_compile_flags = ["-g0", "-O2", "-DNDEBUG", "-ffunction-sections", "-fdata-sections"],
+    opt_link_flags = ["-Wl,--gc-sections"],
+    target_libc = "glibc",
+    target_system_name = "aarch64-linux-gnu",
+    tool_paths = _AARCH64_TOOLS,
+    toolchain_identifier = "aarch64-cross",
+)
+
+filegroup(name = "empty")
+
+cc_toolchain(
+    name = "aarch64_cc",
+    all_files = ":empty",
+    ar_files = ":empty",
+    as_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    toolchain_config = ":aarch64_cc_config",
+)
+
+toolchain(
+    name = "aarch64_cc_toolchain",
+    exec_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+    target_compatible_with = ["@platforms//os:linux", "@platforms//cpu:arm64"],
+    toolchain = ":aarch64_cc",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
+)
+
+# ---------------------------------------------------------------------------
+# CUDA toolchain for the cross build: nvcc runs on the x86_64 host (exec), the
+# runtime resolves to the aarch64 (linux-sbsa) redistribution (target).
+# ---------------------------------------------------------------------------
+cuda_toolkit_toolchain(
+    name = "cuda_toolchain_aarch64",
+    exec_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
+    target_compatible_with = ["@platforms//os:linux", "@platforms//cpu:arm64"],
+)
+
+# The aarch64 target platform. @cuda maps @platforms//cpu:arm64 to linux-sbsa.
+platform(
+    name = "linux_aarch64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+# The same vector-add program, cross-compiled for aarch64.
+cuda_binary(
+    name = "vector_add_aarch64",
+    srcs = ["//:main.cc"],
+    deps = ["//:vector_add"],
+)
+
+# Always builds vector_add_aarch64 for //cross:linux_aarch64, regardless of the
+# command-line --platforms.
+build_for_platform(
+    name = "vector_add_aarch64_build",
+    actual = ":vector_add_aarch64",
+    platform = ":linux_aarch64",
+)
+
+# `bazel test //cross:vector_add_aarch64_test` cross-compiles the CUDA program
+# for aarch64 (nvcc on the host, SBSA runtime) and asserts it builds. Running
+# it requires actual aarch64 CUDA hardware.
+build_test(
+    name = "vector_add_aarch64_test",
+    targets = [":vector_add_aarch64_build"],
+)
