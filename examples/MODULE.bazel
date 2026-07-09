@@ -49,6 +49,7 @@ cuda_ext.redist(
 cuda_ext.redist(
     name = "cuda_12_8_1",
     version = "12.8.1",
+    cudnn_version = "8.9.7",
 )
 use_repo(cuda_ext, "cuda", "cuda_12_8_1", "cuda_12_9_1")
 

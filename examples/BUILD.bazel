@@ -106,3 +106,17 @@ cuda_test(
     srcs = ["cudnn_conv_test.cc"],
     deps = [":cudnn_conv"],
 )
+
+# The same cuDNN test against both CUDA toolkits (each with cuDNN 8.9.7):
+#   bazel test //:cudnn_conv_test_cuda_12_8 //:cudnn_conv_test_cuda_12_9
+cuda_version_test(
+    name = "cudnn_conv_test_cuda_12_8",
+    actual = ":cudnn_conv_test",
+    platform = ":cuda_12_8_1",
+)
+
+cuda_version_test(
+    name = "cudnn_conv_test_cuda_12_9",
+    actual = ":cudnn_conv_test",
+    platform = ":cuda_12_9_1",
+)

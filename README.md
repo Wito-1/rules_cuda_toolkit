@@ -171,12 +171,17 @@ platform(
 bazel test //:my_test --platforms=//:cuda_12_8_1   # build against CUDA 12.8
 ```
 
-The `examples/` directory runs the **same** `vector_add_test` against CUDA 12.8
-**and** 12.9 as two targets (`//:vector_add_test_cuda_12_8` and `…_12_9`) via a
-small platform-transition wrapper, [`examples/multi_version.bzl`](examples/multi_version.bzl).
-It transitions both the target platform and the execution platform, so the CUDA
-runtime *and* the exec-configuration nvcc come from the pinned toolkit — verified
-on an L4: each target compiles with its own `cuda_12_8_1`/`cuda_12_9_1` nvcc.
+The `examples/` directory runs the **same** tests against CUDA 12.8 **and** 12.9
+as separate targets via a small platform-transition wrapper,
+[`examples/multi_version.bzl`](examples/multi_version.bzl):
+
+- `//:vector_add_test_cuda_12_8` / `//:vector_add_test_cuda_12_9`
+- `//:cudnn_conv_test_cuda_12_8` / `//:cudnn_conv_test_cuda_12_9` (cuDNN 8.9.7 on both)
+
+The wrapper transitions both the target platform and the execution platform, so
+the CUDA runtime/cuDNN *and* the exec-configuration nvcc come from the pinned
+toolkit — verified on an L4: each target compiles with its own
+`cuda_12_8_1`/`cuda_12_9_1` nvcc and the cuDNN pipeline runs under both.
 
 ## Public API
 
