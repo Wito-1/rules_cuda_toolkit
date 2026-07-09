@@ -56,21 +56,24 @@ use_repo(cuda_ext, "cuda", "cuda_12_9_1")
 bazel_dep(name = "llvm", version = "0.6.1")
 register_toolchains("@llvm//toolchain:all")
 
-# Register the CUDA toolchain declared in your BUILD (see below).
-register_toolchains("//:cuda_toolchain")
+# Generate and register the CUDA toolchains straight from @cuda. `configure.cuda`
+# is an anchor — any label in the @cuda repo; the extension derives the rest and
+# emits native x86_64/arm64 toolchains plus the x86_64->aarch64 cross toolchain.
+cuda_toolchains = use_extension("@rules_cuda_toolkit//cuda:extensions.bzl", "cuda_toolchains")
+cuda_toolchains.configure(cuda = "@cuda//nvcc:nvcc")
+use_repo(cuda_toolchains, "cuda_toolchains")
+register_toolchains("@cuda_toolchains//:all")
 ```
 
-Then declare the CUDA toolchain in a `BUILD.bazel` of the **root module**
-(where `@cuda` is visible):
+That's the whole toolchain setup — no per-platform `cuda_toolchain` targets in
+your BUILD files. (Prefer to wire it by hand, or need custom constraints? The
+[`cuda_toolkit_toolchain`](cuda/toolchains.bzl) macro does exactly what the
+extension generates; see [`examples/cross/`](examples/cross/) for the shape.)
+
+Restrict which toolchains are generated with `exec_cpus` / `target_cpus`:
 
 ```starlark
-load("@rules_cuda_toolkit//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
-
-cuda_toolkit_toolchain(
-    name = "cuda_toolchain",
-    exec_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
-    target_compatible_with = ["@platforms//os:linux", "@platforms//cpu:x86_64"],
-)
+cuda_toolchains.configure(cuda = "@cuda//nvcc:nvcc", target_cpus = ["x86_64"])
 ```
 
 ## Usage
@@ -228,14 +231,11 @@ The exec/target split makes cross-compilation natural: nvcc and the host
 compiler run on the x86_64 build host (execution configuration) while the CUDA
 runtime and final binary are produced for aarch64 (target configuration).
 `@cuda` maps `@platforms//cpu:arm64` to the `linux-sbsa` redistribution
-automatically. You provide two things:
-
-1. An **aarch64 host C/C++ cross toolchain** for nvcc's `-ccbin` and the final
-   link (system `aarch64-linux-gnu-*`, or a hermetic one such as
-   `toolchains_llvm` with an aarch64 sysroot).
-2. A **CUDA toolchain** with `exec_compatible_with` x86_64 and
-   `target_compatible_with` arm64 — `cuda_toolkit_toolchain(...)` takes those
-   directly.
+automatically. The `cuda_toolchains` extension already generates the
+`x86_64`→`arm64` CUDA toolchain, so the only cross-specific thing you provide is
+an **aarch64 host C/C++ cross toolchain** for nvcc's `-ccbin` and the final link
+(system `aarch64-linux-gnu-*`, or a hermetic one such as `toolchains_llvm` with
+an aarch64 sysroot).
 
 A complete, working setup is in [`examples/cross/`](examples/cross/): it builds
 the same `vector_add` program for aarch64 with

@@ -54,12 +54,15 @@ cuda_ext.redist(
 )
 use_repo(cuda_ext, "cuda", "cuda_12_8_1", "cuda_12_9_1")
 
-# The CUDA toolchain declared in //:cuda_toolchain (see BUILD.bazel).
-register_toolchains("//:cuda_toolchain")
+# Generate the CUDA toolchains from @cuda via the rules_cuda_toolkit extension.
+# One configure() emits native x86_64/arm64 toolchains plus the x86_64->aarch64
+# cross toolchain; no per-platform cuda_toolchain wiring needed.
+cuda_toolchains = use_extension("@rules_cuda_toolkit//cuda:extensions.bzl", "cuda_toolchains")
+cuda_toolchains.configure(cuda = "@cuda//nvcc:nvcc")
+use_repo(cuda_toolchains, "cuda_toolchains")
 
-# Cross-compilation to aarch64 (see //cross): an aarch64 host cc toolchain and
-# a CUDA toolchain whose target is aarch64 (exec stays x86_64 so nvcc runs).
-register_toolchains(
-    "//cross:aarch64_cc_toolchain",
-    "//cross:cuda_toolchain_aarch64",
-)
+register_toolchains("@cuda_toolchains//:all")
+
+# The x86_64 host C/C++ toolchain is Bazel's autodetected one; register the
+# aarch64 host cross toolchain for the cross-compilation example (see //cross).
+register_toolchains("//cross:aarch64_cc_toolchain")

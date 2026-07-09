@@ -1,5 +1,4 @@
 load("@rules_cuda_toolkit//cuda:defs.bzl", "cuda_binary", "cuda_library", "cuda_test")
-load("@rules_cuda_toolkit//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
 load(":multi_version.bzl", "cuda_version_test")
 
 package(default_visibility = ["//visibility:public"])
@@ -27,18 +26,8 @@ platform(
     ],
 )
 
-# The CUDA toolchain, wired to the @cuda repository from cuda_toolkit.
-cuda_toolkit_toolchain(
-    name = "cuda_toolchain",
-    exec_compatible_with = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-    target_compatible_with = [
-        "@platforms//os:linux",
-        "@platforms//cpu:x86_64",
-    ],
-)
+# The CUDA toolchains are generated and registered by the cuda_toolchains
+# extension in MODULE.bazel — no per-platform cuda_toolchain wiring here.
 
 # A library with a CUDA kernel. Produces a CcInfo linkable by any cc_* rule.
 cuda_library(

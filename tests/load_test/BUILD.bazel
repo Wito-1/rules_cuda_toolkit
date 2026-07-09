@@ -2,6 +2,7 @@
 # load. `bazel query //tests/load_test:all` fails if any Starlark file is
 # malformed, without needing the @cuda repository or a CUDA download.
 load("//cuda:defs.bzl", "CudaInfo", "CudaToolchainInfo", "cuda_binary", "cuda_library", "cuda_test", "cuda_toolchain")
+load("//cuda:extensions.bzl", "cuda_toolchains")
 load("//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
 
 _LOADED = [
@@ -11,5 +12,6 @@ _LOADED = [
     cuda_library,
     cuda_test,
     cuda_toolchain,
+    cuda_toolchains,
     cuda_toolkit_toolchain,
 ]
