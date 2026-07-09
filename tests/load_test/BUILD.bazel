@@ -1,0 +1,15 @@
+# Smoke test: forces every public .bzl (and its transitive loads) to parse and
+# load. `bazel query //tests/load_test:all` fails if any Starlark file is
+# malformed, without needing the @cuda repository or a CUDA download.
+load("//cuda:defs.bzl", "CudaInfo", "CudaToolchainInfo", "cuda_binary", "cuda_library", "cuda_test", "cuda_toolchain")
+load("//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
+
+_LOADED = [
+    CudaInfo,
+    CudaToolchainInfo,
+    cuda_binary,
+    cuda_library,
+    cuda_test,
+    cuda_toolchain,
+    cuda_toolkit_toolchain,
+]

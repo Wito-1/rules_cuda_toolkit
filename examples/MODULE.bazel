@@ -1,0 +1,48 @@
+module(
+    name = "rules_cuda_toolkit_examples",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "rules_cuda_toolkit", version = "0.0.1")
+local_path_override(
+    module_name = "rules_cuda_toolkit",
+    path = "..",
+)
+
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+
+# rules_cuda_toolkit needs the @cuda repository, which is produced by the
+# cuda_toolkit module extension. The root module must depend on cuda_toolkit
+# directly to use its extension.
+bazel_dep(name = "cuda_toolkit", version = "0.0.4")
+
+# cuda_toolkit 0.0.4 wires cuDNN/nvrtc cc_imports to the fully-versioned .so
+# files (e.g. libcudnn.so.8.9.7) instead of the DT_SONAME files (libcudnn.so.8)
+# that the redist also ships, so the loader can't resolve them at run time. This
+# patch points those cc_imports at the soname files so cuDNN binaries run.
+single_version_override(
+    module_name = "cuda_toolkit",
+    version = "0.0.4",
+    patch_strip = 1,
+    patches = ["//patches:cuda_toolkit_sonames.patch"],
+)
+
+# rules_cuda_toolkit needs a host C/C++ toolchain that nvcc drives via -ccbin.
+# This example uses Bazel's autodetected system toolchain (gcc + libstdc++),
+# which is what nvcc expects on Linux. For a fully hermetic build, register a
+# gcc/libstdc++ toolchain whose version matches your CUDA release's support
+# matrix (nvcc rejects e.g. clang >= 20 or libc++ for CUDA 12.9).
+
+# Pin one or more CUDA versions. @cuda resolves the right one per platform.
+cuda_ext = use_extension("@cuda_toolkit//extensions:cuda.bzl", "cuda")
+cuda_ext.redist(
+    name = "cuda_12_9_1",
+    version = "12.9.1",
+    # Pin cuDNN on the same tag to expose @cuda//cudnn.
+    cudnn_version = "8.9.7",
+)
+use_repo(cuda_ext, "cuda", "cuda_12_9_1")
+
+# The CUDA toolchain declared in //:cuda_toolchain (see BUILD.bazel).
+register_toolchains("//:cuda_toolchain")

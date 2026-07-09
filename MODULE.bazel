@@ -1,0 +1,19 @@
+module(
+    name = "rules_cuda_toolkit",
+    version = "0.0.1",
+    bazel_compatibility = [">=7.4.0"],
+    compatibility_level = 0,
+)
+
+# Core Starlark/CC support used by the rules.
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+
+# The hermetic CUDA toolkit that provides nvcc / ptxas / headers / runtime
+# libraries under the `@cuda` repository. Consumers pin the concrete CUDA
+# version(s) via the `cuda` module extension in their own MODULE.bazel.
+bazel_dep(name = "cuda_toolkit", version = "0.0.4")
+
+# Development-only dependencies (docs / tests).
+bazel_dep(name = "stardoc", version = "0.8.1", dev_dependency = True)

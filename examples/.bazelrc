@@ -1,0 +1,4 @@
+# This example relies on Bazel's autodetected system C/C++ toolchain (gcc).
+
+# Build for the CUDA architectures you care about.
+common --@rules_cuda_toolkit//cuda:archs=compute_75:sm_75,sm_86

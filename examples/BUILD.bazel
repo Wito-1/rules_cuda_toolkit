@@ -1,0 +1,72 @@
+load("@rules_cuda_toolkit//cuda:defs.bzl", "cuda_binary", "cuda_library", "cuda_test")
+load("@rules_cuda_toolkit//cuda:toolchains.bzl", "cuda_toolkit_toolchain")
+
+package(default_visibility = ["//visibility:public"])
+
+# The CUDA toolchain, wired to the @cuda repository from cuda_toolkit.
+cuda_toolkit_toolchain(
+    name = "cuda_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    target_compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+# A library with a CUDA kernel. Produces a CcInfo linkable by any cc_* rule.
+cuda_library(
+    name = "vector_add",
+    srcs = ["vector_add.cu"],
+    hdrs = ["vector_add.h"],
+)
+
+# An executable that calls into the kernel. cuda_binary compiles main.cc
+# through nvcc and links it with the kernel + the CUDA runtime.
+cuda_binary(
+    name = "vector_add_demo",
+    srcs = ["main.cc"],
+    deps = [":vector_add"],
+)
+
+# A test built the same way as cuda_binary but wrapping cc_test.
+cuda_test(
+    name = "vector_add_test",
+    srcs = ["vector_add_test.cc"],
+    deps = [":vector_add"],
+)
+
+# Relocatable device code: exercises the extra `nvcc -dlink` device-link step.
+cuda_library(
+    name = "vector_add_rdc",
+    srcs = ["vector_add.cu"],
+    hdrs = ["vector_add.h"],
+    rdc = True,
+)
+
+cuda_binary(
+    name = "vector_add_rdc_demo",
+    srcs = ["main.cc"],
+    deps = [":vector_add_rdc"],
+)
+
+# A library that calls into cuDNN. `@cuda//cudnn:cudnn` (from the cudnn_version
+# pinned in MODULE.bazel) provides both the cudnn.h headers and libcudnn, and
+# flows to dependents through this library's CcInfo.
+cuda_library(
+    name = "cudnn_conv",
+    srcs = ["cudnn_conv.cu"],
+    hdrs = ["cudnn_conv.h"],
+    deps = ["@cuda//cudnn:cudnn"],
+)
+
+# Runs the cuDNN convolution pipeline on the GPU. The soname patch in //patches
+# (applied via single_version_override in MODULE.bazel) makes cuDNN's split
+# shared libraries loadable at run time.
+cuda_test(
+    name = "cudnn_conv_test",
+    srcs = ["cudnn_conv_test.cc"],
+    deps = [":cudnn_conv"],
+)

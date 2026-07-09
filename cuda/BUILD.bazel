@@ -1,0 +1,16 @@
+load("//cuda/private:arch.bzl", "cuda_archs_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# The toolchain type resolved by cuda_library / cuda_binary / cuda_test.
+toolchain_type(name = "toolchain_type")
+
+# Default CUDA architectures to compile for. Override on the command line with
+# `--@rules_cuda_toolkit//cuda:archs=compute_80:sm_80,sm_90`, in a target's
+# `archs` attribute, or via `common --//cuda:archs=...` in a .bazelrc.
+cuda_archs_flag(
+    name = "archs",
+    build_setting_default = "sm_75",
+)
+
+exports_files(["defs.bzl", "toolchains.bzl"])

@@ -1,0 +1,5 @@
+# rules_cuda_toolkit does not ship a host C/C++ toolchain. Consumers are
+# expected to register one (e.g. the `llvm` module) themselves.
+common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+
+try-import %workspace%/user.bazelrc

@@ -1,0 +1,74 @@
+diff -ruN orig/cuda/build_defs/cuda_cudnn8.BUILD.bazel new/cuda/build_defs/cuda_cudnn8.BUILD.bazel
+--- a/cuda/build_defs/cuda_cudnn8.BUILD.bazel	2026-07-09 15:50:15.561348874 +0000
++++ b/cuda/build_defs/cuda_cudnn8.BUILD.bazel	2026-07-09 15:50:15.567349056 +0000
+@@ -14,43 +14,43 @@
+ cc_import(
+     name = "cudnn_ops_infer",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_ops_infer.so." + LIB_VERSIONS["libcudnn_ops_infer"],
++    shared_library = "lib/libcudnn_ops_infer.so." + LIB_VERSIONS["libcudnn_ops_infer"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_cnn_infer",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_cnn_infer.so." + LIB_VERSIONS["libcudnn_cnn_infer"],
++    shared_library = "lib/libcudnn_cnn_infer.so." + LIB_VERSIONS["libcudnn_cnn_infer"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_ops_train",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_ops_train.so." + LIB_VERSIONS["libcudnn_ops_train"],
++    shared_library = "lib/libcudnn_ops_train.so." + LIB_VERSIONS["libcudnn_ops_train"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_cnn_train",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_cnn_train.so." + LIB_VERSIONS["libcudnn_cnn_train"],
++    shared_library = "lib/libcudnn_cnn_train.so." + LIB_VERSIONS["libcudnn_cnn_train"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_adv_infer",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_adv_infer.so." + LIB_VERSIONS["libcudnn_adv_infer"],
++    shared_library = "lib/libcudnn_adv_infer.so." + LIB_VERSIONS["libcudnn_adv_infer"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_adv_train",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn_adv_train.so." + LIB_VERSIONS["libcudnn_adv_train"],
++    shared_library = "lib/libcudnn_adv_train.so." + LIB_VERSIONS["libcudnn_adv_train"].split(".")[0],
+ )
+ 
+ cc_import(
+     name = "cudnn_main",
+     deps = [":headers"],
+-    shared_library = "lib/libcudnn.so." + LIB_VERSIONS["libcudnn"],
++    shared_library = "lib/libcudnn.so." + LIB_VERSIONS["libcudnn"].split(".")[0],
+ )
+ 
+ cc_import(
+diff -ruN orig/cuda/build_defs/cuda_nvrtc.BUILD.bazel new/cuda/build_defs/cuda_nvrtc.BUILD.bazel
+--- a/cuda/build_defs/cuda_nvrtc.BUILD.bazel	2026-07-09 15:50:15.563348935 +0000
++++ b/cuda/build_defs/cuda_nvrtc.BUILD.bazel	2026-07-09 15:50:15.570349147 +0000
+@@ -12,14 +12,14 @@
+ cc_import(
+     name = "nvrtc_main",
+     deps = [":headers"],
+-    shared_library = "lib/libnvrtc.so." + LIB_VERSIONS["libnvrtc"],
++    shared_library = "lib/libnvrtc.so." + LIB_VERSIONS["libnvrtc"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
+     name = "nvrtc_builtins_shared_library",
+     deps = [":headers"],
+-    shared_library = "lib/libnvrtc-builtins.so." + LIB_VERSIONS["libnvrtc-builtins"],
++    shared_library = "lib/libnvrtc-builtins.so." + ".".join(LIB_VERSIONS["libnvrtc-builtins"].split(".")[0:2]),
+     visibility = ["//visibility:public"],
+ )
+ 
