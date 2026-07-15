@@ -1,0 +1,100 @@
+diff --git a/cuda/build_defs/cuda_cudnn.BUILD.bazel b/cuda/build_defs/cuda_cudnn.BUILD.bazel
+index 7c9bad5..b70eb15 100644
+--- a/cuda/build_defs/cuda_cudnn.BUILD.bazel
++++ b/cuda/build_defs/cuda_cudnn.BUILD.bazel
+@@ -153,3 +153,75 @@ cc_library(
+     strip_include_prefix = "include",
+     visibility = ["//visibility:public"],
+ )
++
++# Runtime shared objects, one filegroup per sub-library, referenced by their
++# DT_SONAME name (libcudnn*.so.<major>) rather than the fully-versioned file the
++# cc_imports point at, so a consumer staging them for $ORIGIN/rpath resolution
++# gets the name the loader actually looks up. cuDNN is the only redist component
++# that lacked these (cudart/cublas/cufft/... all ship shared_library_files);
++# per-sublib groups additionally let a consumer stage a minimal subset (the
++# dispatcher + graph/ops) without the heavy engines/adv/cnn libraries.
++filegroup(
++    name = "cudnn_main_shared_library",
++    srcs = ["lib/libcudnn.so." + LIB_VERSIONS["libcudnn"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_graph_shared_library",
++    srcs = ["lib/libcudnn_graph.so." + LIB_VERSIONS["libcudnn_graph"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_ops_shared_library",
++    srcs = ["lib/libcudnn_ops.so." + LIB_VERSIONS["libcudnn_ops"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_cnn_shared_library",
++    srcs = ["lib/libcudnn_cnn.so." + LIB_VERSIONS["libcudnn_cnn"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_adv_shared_library",
++    srcs = ["lib/libcudnn_adv.so." + LIB_VERSIONS["libcudnn_adv"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_engines_precompiled_shared_library",
++    srcs = ["lib/libcudnn_engines_precompiled.so." + LIB_VERSIONS["libcudnn_engines_precompiled"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_engines_runtime_compiled_shared_library",
++    srcs = ["lib/libcudnn_engines_runtime_compiled.so." + LIB_VERSIONS["libcudnn_engines_runtime_compiled"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++filegroup(
++    name = "cudnn_heuristic_shared_library",
++    srcs = ["lib/libcudnn_heuristic.so." + LIB_VERSIONS["libcudnn_heuristic"].split(".")[0]],
++    visibility = ["//visibility:public"],
++)
++
++# All cuDNN runtime shared objects (matches the shared_library_files target the
++# other redist components expose).
++filegroup(
++    name = "shared_library_files",
++    srcs = [
++        ":cudnn_main_shared_library",
++        ":cudnn_graph_shared_library",
++        ":cudnn_ops_shared_library",
++        ":cudnn_cnn_shared_library",
++        ":cudnn_adv_shared_library",
++        ":cudnn_engines_precompiled_shared_library",
++        ":cudnn_engines_runtime_compiled_shared_library",
++        ":cudnn_heuristic_shared_library",
++    ],
++    visibility = ["//visibility:public"],
++)
+diff --git a/cuda/redist_proxy_targets.bzl b/cuda/redist_proxy_targets.bzl
+index 6a34315..47743c9 100644
+--- a/cuda/redist_proxy_targets.bzl
++++ b/cuda/redist_proxy_targets.bzl
+@@ -61,6 +61,15 @@ REPO_PUBLIC_TARGETS = {
+         "cudnn_engines_runtime_compiled_static",
+         "cudnn_heuristic_static",
+         "cudnn_static",
++        "cudnn_main_shared_library",
++        "cudnn_graph_shared_library",
++        "cudnn_ops_shared_library",
++        "cudnn_cnn_shared_library",
++        "cudnn_adv_shared_library",
++        "cudnn_engines_precompiled_shared_library",
++        "cudnn_engines_runtime_compiled_shared_library",
++        "cudnn_heuristic_shared_library",
++        "shared_library_files",
+         "header_list",
+         "headers",
+     ],

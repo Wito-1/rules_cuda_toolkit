@@ -32,6 +32,10 @@ single_version_override(
         # Add a linux-aarch64 (Jetson/L4T) platform alongside linux-sbsa,
         # selectable via the @cuda_toolkit//:jetson constraint.
         "//patches:cuda_toolkit_jetson.patch",
+        # Give cuDNN the shared_library_files filegroup (plus per-sublib,
+        # DT_SONAME-named groups) that every other redist component already has,
+        # so its runtime .so's can be staged for $ORIGIN/rpath resolution.
+        "//patches:cuda_toolkit_cudnn_shared_library_files.patch",
     ],
 )
 
