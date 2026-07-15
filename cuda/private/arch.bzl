@@ -47,7 +47,8 @@ def parse_archs(spec_str):
             gpus_str = raw_spec
 
         gpus = []
-        nums = []
+        min_num = None
+        min_raw = None
         for raw_gpu in gpus_str.split(","):
             raw_gpu = raw_gpu.strip()
             if not raw_gpu:
@@ -55,14 +56,18 @@ def parse_archs(spec_str):
             kind = _arch_kind(raw_gpu)
             num = _arch_num(raw_gpu)
             gpus.append(struct(kind = kind, num = num))
-            nums.append(int(num))
+            n = _arch_int(num)
+            if min_num == None or n < min_num:
+                min_num = n
+                min_raw = num
 
         if not gpus:
             fail("cuda arch spec \"{}\" does not list any GPU architectures".format(raw_spec))
 
-        # When the virtual arch is omitted, nvcc uses the minimum requested arch.
+        # When the virtual arch is omitted, nvcc uses the minimum requested arch,
+        # preserving any accelerated-arch suffix (e.g. sm_90a -> compute_90a).
         if virtual == None:
-            virtual = str(min(nums))
+            virtual = min_raw
 
         specs.append(struct(virtual = virtual, gpus = gpus))
 
@@ -81,6 +86,21 @@ def _arch_num(arch):
     if len(parts) != 2 or not parts[1]:
         fail("malformed cuda arch \"{}\" (expected e.g. sm_80)".format(arch))
     return parts[1]
+
+def _arch_int(num):
+    # Numeric arch value with any trailing accelerated-arch suffix stripped (the
+    # 'a'/'f' in sm_90a, sm_100f, ...), for magnitude comparison only. int()
+    # cannot parse the suffixed form; the full suffixed string is preserved on
+    # the gpu struct (and as the derived virtual arch) so gencode still emits
+    # e.g. arch=compute_90a,code=sm_90a.
+    digits = ""
+    for ch in num.elems():
+        if ch not in "0123456789":
+            break
+        digits += ch
+    if not digits:
+        fail("malformed cuda arch number \"{}\" (expected leading digits)".format(num))
+    return int(digits)
 
 def gencode_flags(specs):
     """Returns the nvcc `-gencode`/`-arch` flags for a compile action."""
