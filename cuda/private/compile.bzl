@@ -111,11 +111,21 @@ def _toolchain_host_flags(ctx, cc_toolchain):
 def create_common(ctx, cuda_toolchain, cc_toolchain):
     """Gathers deps/includes/defines/flags into a struct for the actions."""
     dep_cc_infos = [d[CcInfo] for d in ctx.attr.deps if CcInfo in d]
+    all_cc_infos = dep_cc_infos + [cuda_toolchain.compile_ccinfo]
     merged_cc = cc_common.merge_cc_infos(
         direct_cc_infos = dep_cc_infos,
         cc_infos = [cuda_toolchain.compile_ccinfo],
     )
     cc_ctx = merged_cc.compilation_context
+
+    # cc_common.merge_cc_infos drops `external_includes`, so collect it from the
+    # unmerged contexts. Under the `external_include_paths` feature this is where
+    # external repos' include dirs live (moved out of `includes`) -- including
+    # the CUDA toolkit's own headers dir holding cuda_runtime.h.
+    external_includes = depset(transitive = [
+        ci.compilation_context.external_includes
+        for ci in all_cc_infos
+    ]).to_list()
 
     dep_defines = depset(
         ctx.attr.defines,
@@ -130,7 +140,10 @@ def create_common(ctx, cuda_toolchain, cc_toolchain):
         headers = depset(direct_headers, transitive = [cc_ctx.headers]),
         # nvcc has no `-iquote`; quote includes are merged into `-I`.
         includes = cc_ctx.includes.to_list() + cc_ctx.quote_includes.to_list() + ctx.attr.includes,
-        system_includes = cc_ctx.system_includes.to_list(),
+        # External-repo includes (see external_includes above) are emitted as
+        # `-isystem`, matching what the external_include_paths feature does for
+        # ordinary cc rules.
+        system_includes = cc_ctx.system_includes.to_list() + external_includes,
         defines = dep_defines.to_list(),
         local_defines = ctx.attr.local_defines,
         compile_flags = _validate_copts("copts", ctx.attr.copts),
