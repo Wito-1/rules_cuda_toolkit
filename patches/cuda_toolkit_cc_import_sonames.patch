@@ -1,0 +1,380 @@
+diff -ruN a/cuda/build_defs/cuda_cublas.BUILD.bazel b/cuda/build_defs/cuda_cublas.BUILD.bazel
+--- a/cuda/build_defs/cuda_cublas.BUILD.bazel
++++ b/cuda/build_defs/cuda_cublas.BUILD.bazel
+@@ -13,12 +13,17 @@
+ 
+ cc_import(
+     name = "cublas_shared_library",
+-    shared_library = "lib/libcublas.so." + LIB_VERSIONS["libcublas"],
+-    deps = [":headers"],
++    shared_library = "lib/libcublas.so." + LIB_VERSIONS["libcublas"].split(".")[0],
++    deps = [":headers", ":cublas_shared_library_versioned"],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cublas_shared_library_versioned",
++    shared_library = "lib/libcublas.so." + LIB_VERSIONS["libcublas"],
++)
++
++cc_import(
+     name = "cublas_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcublas.so",
+@@ -28,12 +33,17 @@
+ 
+ cc_import(
+     name = "cublasLt_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcublasLt.so." + LIB_VERSIONS["libcublaslt"],
++    deps = [":headers", ":cublasLt_shared_library_versioned"],
++    shared_library = "lib/libcublasLt.so." + LIB_VERSIONS["libcublaslt"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cublasLt_shared_library_versioned",
++    shared_library = "lib/libcublasLt.so." + LIB_VERSIONS["libcublaslt"],
++)
++
++cc_import(
+     name = "cublasLt_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcublasLt.so",
+@@ -95,12 +105,17 @@
+ 
+ cc_import(
+     name = "nvblas_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libnvblas.so." + LIB_VERSIONS["libnvblas"],
++    deps = [":headers", ":nvblas_shared_library_versioned"],
++    shared_library = "lib/libnvblas.so." + LIB_VERSIONS["libnvblas"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "nvblas_shared_library_versioned",
++    shared_library = "lib/libnvblas.so." + LIB_VERSIONS["libnvblas"],
++)
++
++cc_import(
+     name = "nvblas_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/libnvblas.so",
+diff -ruN a/cuda/build_defs/cuda_cudart.BUILD.bazel b/cuda/build_defs/cuda_cudart.BUILD.bazel
+--- a/cuda/build_defs/cuda_cudart.BUILD.bazel
++++ b/cuda/build_defs/cuda_cudart.BUILD.bazel
+@@ -128,12 +128,17 @@
+ 
+ cc_import(
+     name = "cudart_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcudart.so." + LIB_VERSIONS["libcudart"],
++    deps = [":headers", ":cudart_shared_library_versioned"],
++    shared_library = "lib/libcudart.so." + LIB_VERSIONS["libcudart"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cudart_shared_library_versioned",
++    shared_library = "lib/libcudart.so." + LIB_VERSIONS["libcudart"],
++)
++
++cc_import(
+     name = "cudart_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/libcudart.so",
+diff -ruN a/cuda/build_defs/cuda_cudnn.BUILD.bazel b/cuda/build_defs/cuda_cudnn.BUILD.bazel
+--- a/cuda/build_defs/cuda_cudnn.BUILD.bazel
++++ b/cuda/build_defs/cuda_cudnn.BUILD.bazel
+@@ -13,49 +13,89 @@
+ 
+ cc_import(
+     name = "cudnn_ops",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_ops_versioned"],
++    shared_library = "lib/libcudnn_ops.so." + LIB_VERSIONS["libcudnn_ops"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_ops_versioned",
+     shared_library = "lib/libcudnn_ops.so." + LIB_VERSIONS["libcudnn_ops"],
+ )
+ 
+ cc_import(
+     name = "cudnn_cnn",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_cnn_versioned"],
++    shared_library = "lib/libcudnn_cnn.so." + LIB_VERSIONS["libcudnn_cnn"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_cnn_versioned",
+     shared_library = "lib/libcudnn_cnn.so." + LIB_VERSIONS["libcudnn_cnn"],
+ )
+ 
+ cc_import(
+     name = "cudnn_adv",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_adv_versioned"],
++    shared_library = "lib/libcudnn_adv.so." + LIB_VERSIONS["libcudnn_adv"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_adv_versioned",
+     shared_library = "lib/libcudnn_adv.so." + LIB_VERSIONS["libcudnn_adv"],
+ )
+ 
+ cc_import(
+     name = "cudnn_graph",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_graph_versioned"],
++    shared_library = "lib/libcudnn_graph.so." + LIB_VERSIONS["libcudnn_graph"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_graph_versioned",
+     shared_library = "lib/libcudnn_graph.so." + LIB_VERSIONS["libcudnn_graph"],
+ )
+ 
+ cc_import(
+     name = "cudnn_engines_precompiled",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_engines_precompiled_versioned"],
++    shared_library = "lib/libcudnn_engines_precompiled.so." + LIB_VERSIONS["libcudnn_engines_precompiled"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_engines_precompiled_versioned",
+     shared_library = "lib/libcudnn_engines_precompiled.so." + LIB_VERSIONS["libcudnn_engines_precompiled"],
+ )
+ 
+ cc_import(
+     name = "cudnn_engines_runtime_compiled",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_engines_runtime_compiled_versioned"],
++    shared_library = "lib/libcudnn_engines_runtime_compiled.so." + LIB_VERSIONS["libcudnn_engines_runtime_compiled"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_engines_runtime_compiled_versioned",
+     shared_library = "lib/libcudnn_engines_runtime_compiled.so." + LIB_VERSIONS["libcudnn_engines_runtime_compiled"],
+ )
+ 
+ cc_import(
+     name = "cudnn_heuristic",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_heuristic_versioned"],
++    shared_library = "lib/libcudnn_heuristic.so." + LIB_VERSIONS["libcudnn_heuristic"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_heuristic_versioned",
+     shared_library = "lib/libcudnn_heuristic.so." + LIB_VERSIONS["libcudnn_heuristic"],
+ )
+ 
+ cc_import(
+     name = "cudnn_main",
+-    deps = [":headers"],
++    deps = [":headers", ":cudnn_main_versioned"],
++    shared_library = "lib/libcudnn.so." + LIB_VERSIONS["libcudnn"].split(".")[0],
++)
++
++cc_import(
++    name = "cudnn_main_versioned",
+     shared_library = "lib/libcudnn.so." + LIB_VERSIONS["libcudnn"],
+ )
+ 
+diff -ruN a/cuda/build_defs/cuda_cufft.BUILD.bazel b/cuda/build_defs/cuda_cufft.BUILD.bazel
+--- a/cuda/build_defs/cuda_cufft.BUILD.bazel
++++ b/cuda/build_defs/cuda_cufft.BUILD.bazel
+@@ -21,12 +21,17 @@
+ 
+ cc_import(
+     name = "cufft_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcufft.so." + LIB_VERSIONS["libcufft"],
++    deps = [":headers", ":cufft_shared_library_versioned"],
++    shared_library = "lib/libcufft.so." + LIB_VERSIONS["libcufft"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cufft_shared_library_versioned",
++    shared_library = "lib/libcufft.so." + LIB_VERSIONS["libcufft"],
++)
++
++cc_import(
+     name = "cufft_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcufft.so",
+@@ -71,12 +76,17 @@
+ 
+ cc_import(
+     name = "cufftw_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcufftw.so." + LIB_VERSIONS["libcufftw"],
++    deps = [":headers", ":cufftw_shared_library_versioned"],
++    shared_library = "lib/libcufftw.so." + LIB_VERSIONS["libcufftw"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cufftw_shared_library_versioned",
++    shared_library = "lib/libcufftw.so." + LIB_VERSIONS["libcufftw"],
++)
++
++cc_import(
+     name = "cufftw_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcufftw.so",
+diff -ruN a/cuda/build_defs/cuda_cupti.BUILD.bazel b/cuda/build_defs/cuda_cupti.BUILD.bazel
+--- a/cuda/build_defs/cuda_cupti.BUILD.bazel
++++ b/cuda/build_defs/cuda_cupti.BUILD.bazel
+@@ -12,7 +12,7 @@
+ )
+ load("@rules_cc//cc:cc_import.bzl", "cc_import")
+ load("@rules_cc//cc:cc_library.bzl", "cc_library")
+-load("//:version.bzl", "LIB_VERSIONS")
++load("//:version.bzl", "LIB_VERSIONS", "VERSION_MAJOR")
+ 
+ # Keep concrete paths explicit; reserve glob only for real patterns.
+ _HEADER_FILES = [
+@@ -47,12 +47,17 @@
+ 
+ cc_import(
+     name = "cupti_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcupti.so." + LIB_VERSIONS["libcupti"],
++    deps = [":headers", ":cupti_shared_library_versioned"],
++    shared_library = "lib/libcupti.so." + VERSION_MAJOR,
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cupti_shared_library_versioned",
++    shared_library = "lib/libcupti.so." + LIB_VERSIONS["libcupti"],
++)
++
++cc_import(
+     name = "cupti_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/libcupti.so",
+diff -ruN a/cuda/build_defs/cuda_curand.BUILD.bazel b/cuda/build_defs/cuda_curand.BUILD.bazel
+--- a/cuda/build_defs/cuda_curand.BUILD.bazel
++++ b/cuda/build_defs/cuda_curand.BUILD.bazel
+@@ -11,12 +11,17 @@
+ 
+ cc_import(
+     name = "curand_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcurand.so." + LIB_VERSIONS["libcurand"],
++    deps = [":headers", ":curand_shared_library_versioned"],
++    shared_library = "lib/libcurand.so." + LIB_VERSIONS["libcurand"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "curand_shared_library_versioned",
++    shared_library = "lib/libcurand.so." + LIB_VERSIONS["libcurand"],
++)
++
++cc_import(
+     name = "curand_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcurand.so",
+diff -ruN a/cuda/build_defs/cuda_cusolver.BUILD.bazel b/cuda/build_defs/cuda_cusolver.BUILD.bazel
+--- a/cuda/build_defs/cuda_cusolver.BUILD.bazel
++++ b/cuda/build_defs/cuda_cusolver.BUILD.bazel
+@@ -11,18 +11,24 @@
+ 
+ cc_import(
+     name = "cusolver_shared_library",
+-    shared_library = "lib/libcusolver.so." + LIB_VERSIONS["libcusolver"],
++    shared_library = "lib/libcusolver.so." + LIB_VERSIONS["libcusolver"].split(".")[0],
+     deps = [
+         "@{cuda_redist_repo}//nvjitlink:nvjitlink_shared_library",
+         "@{cuda_redist_repo}//cusparse:cusparse_shared_library",
+         "@{cuda_redist_repo}//cublas:cublas_shared_library",
+         "@{cuda_redist_repo}//cublas:cublasLt_shared_library",
+         ":headers",
++        ":cusolver_shared_library_versioned",
+     ],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cusolver_shared_library_versioned",
++    shared_library = "lib/libcusolver.so." + LIB_VERSIONS["libcusolver"],
++)
++
++cc_import(
+     name = "cusolver_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcusolver.so",
+@@ -56,12 +62,17 @@
+ 
+ cc_import(
+     name = "cusolverMg_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libcusolverMg.so." + LIB_VERSIONS["libcusolvermg"],
++    deps = [":headers", ":cusolverMg_shared_library_versioned"],
++    shared_library = "lib/libcusolverMg.so." + LIB_VERSIONS["libcusolvermg"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cusolverMg_shared_library_versioned",
++    shared_library = "lib/libcusolverMg.so." + LIB_VERSIONS["libcusolvermg"],
++)
++
++cc_import(
+     name = "cusolverMg_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcusolverMg.so",
+diff -ruN a/cuda/build_defs/cuda_cusparse.BUILD.bazel b/cuda/build_defs/cuda_cusparse.BUILD.bazel
+--- a/cuda/build_defs/cuda_cusparse.BUILD.bazel
++++ b/cuda/build_defs/cuda_cusparse.BUILD.bazel
+@@ -11,12 +11,17 @@
+ 
+ cc_import(
+     name = "cusparse_shared_library",
+-    shared_library = "lib/libcusparse.so." + LIB_VERSIONS["libcusparse"],
+-    deps = ["@{cuda_redist_repo}//nvjitlink:nvjitlink_shared_library", ":headers"],
++    shared_library = "lib/libcusparse.so." + LIB_VERSIONS["libcusparse"].split(".")[0],
++    deps = ["@{cuda_redist_repo}//nvjitlink:nvjitlink_shared_library", ":headers", ":cusparse_shared_library_versioned"],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "cusparse_shared_library_versioned",
++    shared_library = "lib/libcusparse.so." + LIB_VERSIONS["libcusparse"],
++)
++
++cc_import(
+     name = "cusparse_interface_library",
+     deps = [":headers"],
+     interface_library = "lib/stubs/libcusparse.so",
+diff -ruN a/cuda/build_defs/cuda_nvjitlink.BUILD.bazel b/cuda/build_defs/cuda_nvjitlink.BUILD.bazel
+--- a/cuda/build_defs/cuda_nvjitlink.BUILD.bazel
++++ b/cuda/build_defs/cuda_nvjitlink.BUILD.bazel
+@@ -13,12 +13,17 @@
+ 
+ cc_import(
+     name = "nvjitlink_shared_library",
+-    deps = [":headers"],
+-    shared_library = "lib/libnvJitLink.so." + LIB_VERSIONS["libnvjitlink"],
++    deps = [":headers", ":nvjitlink_shared_library_versioned"],
++    shared_library = "lib/libnvJitLink.so." + LIB_VERSIONS["libnvjitlink"].split(".")[0],
+     visibility = ["//visibility:public"],
+ )
+ 
+ cc_import(
++    name = "nvjitlink_shared_library_versioned",
++    shared_library = "lib/libnvJitLink.so." + LIB_VERSIONS["libnvjitlink"],
++)
++
++cc_import(
+     name = "nvjitlink_interface_library",
+     deps = [":headers"],
+     interface_library = if_version_equal_or_lower_than(
