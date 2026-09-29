@@ -147,6 +147,38 @@ cuSOLVER, cuRAND, NVRTC, etc. — any component `cuda_toolkit` exposes under
 > With the patch, the `examples/` cuDNN convolution test builds, links **and
 > runs** — verified end-to-end on an NVIDIA L4.
 
+> **Runtime-library `cc_import` patch:** the same fully-versioned wiring affects
+> every runtime/math-library import — cudart, cuBLAS, cuFFT, cuRAND, cuSPARSE,
+> cuSOLVER, nvJitLink, cuDNN 9 and CUPTI (`libcudart.so.12.8.90` where the
+> loader wants the `DT_SONAME`, `libcudart.so.12`). A binary that links one of
+> them gets the fully-versioned file staged into its `_solib_<cpu>` dir and
+> runfiles, but its `DT_NEEDED` is the soname, so it only runs on a machine that
+> happens to provide the library on the system loader path.
+> [`patches/cuda_toolkit_cc_import_sonames.patch`](patches/cuda_toolkit_cc_import_sonames.patch)
+> points each of those imports at the soname file and gives it a dep on a second
+> `<name>_versioned` import of the fully-versioned file, so consumers stage both
+> names (the linker collapses them into one `DT_NEEDED`). Existing labels are
+> unchanged. It is written against `cuda_toolkit` 0.0.5 (0.0.5 still names the
+> fully-versioned files; the fix on upstream `main`, "Stage shared libraries by
+> SONAME", is unreleased and stages only the soname file). Apply it alongside
+> the cuDNN patch, which applies to 0.0.4 and 0.0.5 alike:
+>
+> ```starlark
+> single_version_override(
+>     module_name = "cuda_toolkit",
+>     version = "0.0.5",
+>     patch_strip = 1,
+>     patches = [
+>         "//patches:cuda_toolkit_sonames.patch",
+>         "//patches:cuda_toolkit_cc_import_sonames.patch",
+>     ],
+> )
+> ```
+>
+> The `cuda_cupti` template additionally gains a `VERSION_MAJOR` load, since
+> CUPTI's on-disk name is calendar-versioned (`libcupti.so.2025.1.1`) while its
+> soname tracks the CUDA major (`libcupti.so.12`).
+
 ### Multiple CUDA versions
 
 Register more than one version; `@cuda` resolves whichever one the active

@@ -1,1 +1,5 @@
-exports_files(["cuda_toolkit_sonames.patch", "cuda_toolkit_jetson.patch"])
+exports_files([
+    "cuda_toolkit_sonames.patch",
+    "cuda_toolkit_jetson.patch",
+    "cuda_toolkit_cc_import_sonames.patch",
+])
